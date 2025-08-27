@@ -15,25 +15,69 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { Company, Job } from '@/types';
-import { mockCompanies, mockJobs } from '@/lib/mockData';
+import { fetchAllData } from '@/lib/dataService';
 
 export default function CompanyProfilePage() {
   const params = useParams();
   const router = useRouter();
   const [company, setCompany] = useState<Company | null>(null);
   const [companyJobs, setCompanyJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const companyId = params.id as string;
-    const foundCompany = mockCompanies.find((c) => c.id === companyId);
+    const loadCompanyData = async () => {
+      try {
+        const companyId = params.id as string;
+        console.log('Loading company data for ID:', companyId);
 
-    if (foundCompany) {
-      setCompany(foundCompany);
-      // Get jobs for this company
-      const jobs = mockJobs.filter((job) => job.companyId === companyId);
-      setCompanyJobs(jobs);
-    }
+        // Fetch all data once to ensure openPositions is calculated correctly
+        const { companies, jobs } = await fetchAllData();
+        const companyData = companies.find((c) => c.id === companyId);
+
+        if (companyData) {
+          console.log(
+            'Company found:',
+            companyData.name,
+            'with',
+            companyData.openPositions,
+            'open positions'
+          );
+          setCompany(companyData);
+
+          // Filter jobs for this company
+          const companyJobs = jobs.filter(
+            (job) => job.company === companyData.name
+          );
+          console.log(
+            'Found',
+            companyJobs.length,
+            'jobs for company:',
+            companyData.name
+          );
+          setCompanyJobs(companyJobs);
+        } else {
+          console.warn('Company not found with ID:', companyId);
+        }
+      } catch (error) {
+        console.error('Failed to load company data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCompanyData();
   }, [params.id]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading company profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!company) {
     return (

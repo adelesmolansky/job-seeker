@@ -1,0 +1,24 @@
+{
+  "name": "job-seeker-scripts",
+  "version": "1.0.0",
+  "description": "Data collection scripts for job seeker application",
+  "main": "index.js",
+  "scripts": {
+    "find-companies": "tsx find-ai-companies.ts",
+    "find-jobs": "tsx find-job-postings.ts",
+    "find-company-info": "tsx find-company-info.ts",
+    "run-all": "npm run find-companies && npm run find-jobs && npm run find-company-info"
+  },
+  "dependencies": {
+    "openai": "^5.16.0",
+    "csv-writer": "^1.6.0",
+    "csv-parser": "^3.0.0",
+    "uuid": "^10.0.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,16 +1,46 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Building2, MapPin, Users, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { Company } from '@/types';
-import { mockCompanies } from '@/lib/mockData';
+import { fetchAllData } from '@/lib/dataService';
 
 export default function CompaniesPage() {
-  const [companies] = useState<Company[]>(mockCompanies);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [industryFilter, setIndustryFilter] = useState('');
   const [sizeFilter, setSizeFilter] = useState('');
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        console.log('Companies page: Loading data...');
+        const { companies: companiesData } = await fetchAllData();
+        console.log(
+          'Companies page: Data loaded:',
+          companiesData.length,
+          'companies'
+        );
+        console.log('Sample company:', companiesData[0]);
+
+        if (companiesData.length === 0) {
+          console.warn('Companies page: No companies data received');
+        }
+
+        setCompanies(companiesData);
+      } catch (error) {
+        console.error('Failed to load companies:', error);
+        // Set empty array to prevent infinite loading
+        setCompanies([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const filteredCompanies = useMemo(() => {
     return companies.filter((company) => {
@@ -29,6 +59,17 @@ export default function CompaniesPage() {
 
   const industries = [...new Set(companies.map((c) => c.industry))];
   const sizes = [...new Set(companies.map((c) => c.size))];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading companies...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -5,15 +5,25 @@ import Link from 'next/link';
 import { Heart, Briefcase, Trash2 } from 'lucide-react';
 import JobCard from '@/components/JobCard';
 import { Job } from '@/types';
-import { mockJobs } from '@/lib/mockData';
+import { fetchSavedJobs } from '@/lib/dataService';
 
 export default function SavedJobsPage() {
   const [savedJobs, setSavedJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get saved jobs from mock data
-    const saved = mockJobs.filter((job) => job.isSaved);
-    setSavedJobs(saved);
+    const loadSavedJobs = async () => {
+      try {
+        const saved = await fetchSavedJobs();
+        setSavedJobs(saved);
+      } catch (error) {
+        console.error('Failed to load saved jobs:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSavedJobs();
   }, []);
 
   const handleSaveToggle = (jobId: string) => {
@@ -25,6 +35,17 @@ export default function SavedJobsPage() {
     setSavedJobs([]);
     // In a real app, you'd update the backend here
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading saved jobs...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

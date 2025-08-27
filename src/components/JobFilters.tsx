@@ -97,7 +97,7 @@ export default function JobFilters({
   return (
     <div className="space-y-6">
       {/* Filters Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <Filter className="h-5 w-5 text-gray-600" />

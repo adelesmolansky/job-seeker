@@ -16,29 +16,38 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { Job, Company } from '@/types';
-import { mockJobs, mockCompanies } from '@/lib/mockData';
+import { fetchJobById, fetchCompanyById } from '@/lib/dataService';
 
 export default function JobProfilePage() {
   const params = useParams();
   const router = useRouter();
   const [job, setJob] = useState<Job | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    const jobId = params.id as string;
-    const foundJob = mockJobs.find((j) => j.id === jobId);
+    const loadJobData = async () => {
+      try {
+        const jobId = params.id as string;
+        const jobData = await fetchJobById(jobId);
 
-    if (foundJob) {
-      setJob(foundJob);
-      setIsSaved(foundJob.isSaved);
+        if (jobData) {
+          setJob(jobData);
+          setIsSaved(jobData.isSaved);
 
-      // Get company info
-      const foundCompany = mockCompanies.find(
-        (c) => c.id === foundJob.companyId
-      );
-      setCompany(foundCompany || null);
-    }
+          // Get company info
+          const companyData = await fetchCompanyById(jobData.companyId);
+          setCompany(companyData);
+        }
+      } catch (error) {
+        console.error('Failed to load job data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadJobData();
   }, [params.id]);
 
   const handleSaveToggle = () => {
@@ -54,6 +63,17 @@ export default function JobProfilePage() {
       day: 'numeric',
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading job details...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!job) {
     return (
