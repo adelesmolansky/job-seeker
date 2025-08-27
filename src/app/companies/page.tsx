@@ -14,32 +14,18 @@ export default function CompaniesPage() {
   const [sizeFilter, setSizeFilter] = useState('');
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadCompanies = async () => {
       try {
-        console.log('Companies page: Loading data...');
         const { companies: companiesData } = await fetchAllData();
-        console.log(
-          'Companies page: Data loaded:',
-          companiesData.length,
-          'companies'
-        );
-        console.log('Sample company:', companiesData[0]);
-
-        if (companiesData.length === 0) {
-          console.warn('Companies page: No companies data received');
-        }
-
         setCompanies(companiesData);
       } catch (error) {
         console.error('Failed to load companies:', error);
-        // Set empty array to prevent infinite loading
-        setCompanies([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadData();
+    loadCompanies();
   }, []);
 
   const filteredCompanies = useMemo(() => {
@@ -75,7 +61,7 @@ export default function CompaniesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             AI Startup Companies
           </h1>

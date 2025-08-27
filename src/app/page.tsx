@@ -223,8 +223,11 @@ export default function HomePage() {
   }, [jobs, searchQuery, filters, sort, hasSearched, isAISearch]);
 
   const handleSaveToggle = (jobId: string) => {
-    // In a real app, you'd update the backend here
-    console.log('Toggle save for job:', jobId);
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
+        job.id === jobId ? { ...job, isSaved: !job.isSaved } : job
+      )
+    );
   };
 
   const handleClearFilters = () => {
@@ -249,7 +252,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Find Your Next AI Startup Role
           </h1>

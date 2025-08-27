@@ -32,7 +32,6 @@ export async function fetchAllData(): Promise<{
   companies: Company[];
 }> {
   try {
-    console.log('Fetching all data...');
     const [jobsResponse, companiesResponse] = await Promise.all([
       fetch('/api/csv-data?type=jobs'),
       fetch('/api/csv-data?type=companies'),
@@ -44,13 +43,6 @@ export async function fetchAllData(): Promise<{
 
     const jobsData = await jobsResponse.json();
     const companiesData = await companiesResponse.json();
-
-    console.log('Jobs data received:', jobsData.data?.length || 0, 'jobs');
-    console.log(
-      'Companies data received:',
-      companiesData.data?.length || 0,
-      'companies'
-    );
 
     // Transform CSV data to match our interfaces
     const jobs: Job[] = (jobsData.data || []).map((record: unknown) => {
@@ -113,36 +105,12 @@ export async function fetchAllData(): Promise<{
       }
     );
 
-    console.log('Companies transformed:', companies.length, 'companies');
-    console.log('Sample company:', companies[0]);
-
     // Calculate open positions for each company based on actual jobs
-    console.log('Calculating open positions...');
-    console.log('Total jobs:', jobs.length);
-    console.log('Total companies:', companies.length);
-
     companies.forEach((company) => {
       const companyJobs = jobs.filter((job) => job.company === company.name);
       company.openPositions = companyJobs.length;
-      console.log(
-        `Company: ${company.name} - Open positions: ${company.openPositions}`
-      );
-
-      // Debug: show job titles for companies with positions
-      if (companyJobs.length > 0) {
-        console.log(
-          `  Jobs: ${companyJobs.map((job) => job.title).join(', ')}`
-        );
-      }
     });
 
-    console.log(
-      'Data transformation complete. Returning:',
-      jobs.length,
-      'jobs and',
-      companies.length,
-      'companies'
-    );
     return { jobs, companies };
   } catch (error) {
     console.error('Error fetching all data:', error);
@@ -164,9 +132,6 @@ export async function fetchCompanyById(
       // Ensure openPositions is calculated correctly
       const companyJobs = jobs.filter((job) => job.company === company.name);
       company.openPositions = companyJobs.length;
-      console.log(
-        `Company ${company.name} has ${company.openPositions} open positions`
-      );
     }
 
     return company || null;
@@ -199,9 +164,6 @@ export async function fetchJobsByCompany(companyId: string): Promise<Job[]> {
 
     if (company) {
       const companyJobs = jobs.filter((job) => job.company === company.name);
-      console.log(
-        `Found ${companyJobs.length} jobs for company ${company.name}`
-      );
       return companyJobs;
     }
 

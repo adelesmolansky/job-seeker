@@ -261,7 +261,6 @@ Please find the most relevant jobs and return ONLY the job titles in the matched
       });
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
-      console.log('Raw AI response:', aiResponse);
 
       // Fallback: use semantic search
       const queryLower = query.toLowerCase();

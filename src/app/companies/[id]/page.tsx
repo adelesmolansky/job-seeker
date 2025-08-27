@@ -28,31 +28,17 @@ export default function CompanyProfilePage() {
     const loadCompanyData = async () => {
       try {
         const companyId = params.id as string;
-        console.log('Loading company data for ID:', companyId);
 
         // Fetch all data once to ensure openPositions is calculated correctly
         const { companies, jobs } = await fetchAllData();
         const companyData = companies.find((c) => c.id === companyId);
 
         if (companyData) {
-          console.log(
-            'Company found:',
-            companyData.name,
-            'with',
-            companyData.openPositions,
-            'open positions'
-          );
           setCompany(companyData);
 
           // Filter jobs for this company
           const companyJobs = jobs.filter(
             (job) => job.company === companyData.name
-          );
-          console.log(
-            'Found',
-            companyJobs.length,
-            'jobs for company:',
-            companyData.name
           );
           setCompanyJobs(companyJobs);
         } else {

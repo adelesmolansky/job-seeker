@@ -24,6 +24,7 @@ export default function JobFilters({
 }: JobFiltersProps) {
   const [locationInput, setLocationInput] = useState('');
   const [skillsInput, setSkillsInput] = useState('');
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
 
   const handleFilterChange = (
     key: keyof JobSearchFilters,
@@ -98,175 +99,201 @@ export default function JobFilters({
     <div className="space-y-6">
       {/* Filters Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between mb-4">
+        <div
+          className={`flex items-center justify-between ${
+            isFiltersCollapsed ? 'mb-0' : 'mb-4'
+          }`}
+        >
           <div className="flex items-center space-x-3">
             <Filter className="h-5 w-5 text-gray-600" />
             <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
           </div>
-          {hasActiveFilters && (
+          <div className="flex items-center space-x-2">
             <button
-              onClick={onClearFilters}
+              onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
               className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors"
             >
-              <X className="h-4 w-4" />
-              <span>Clear all</span>
+              {isFiltersCollapsed ? (
+                <>
+                  <span>Show filters</span>
+                </>
+              ) : (
+                <>
+                  <span>Hide filters</span>
+                </>
+              )}
             </button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Job Type
-            </label>
-            <select
-              value={filters.type}
-              onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Any type</option>
-              <option value="full-time">Full-time</option>
-              <option value="part-time">Part-time</option>
-              <option value="contract">Contract</option>
-              <option value="internship">Internship</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Experience
-            </label>
-            <select
-              value={filters.experienceLevel}
-              onChange={(e) =>
-                handleFilterChange('experienceLevel', e.target.value)
-              }
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Any level</option>
-              <option value="entry">Entry</option>
-              <option value="mid">Mid</option>
-              <option value="senior">Senior</option>
-              <option value="lead">Lead</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Remote
-            </label>
-            <select
-              value={filters.remote ? 'true' : 'false'}
-              onChange={(e) =>
-                handleFilterChange('remote', e.target.value === 'true')
-              }
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Any</option>
-              <option value="true">Remote only</option>
-              <option value="false">On-site only</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Min Salary
-            </label>
-            <input
-              type="number"
-              value={filters.salaryMin || ''}
-              onChange={(e) =>
-                handleFilterChange(
-                  'salaryMin',
-                  e.target.value ? Number(e.target.value) : 0
-                )
-              }
-              placeholder="Min"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Max Salary
-            </label>
-            <input
-              type="number"
-              value={filters.salaryMax || ''}
-              onChange={(e) =>
-                handleFilterChange(
-                  'salaryMax',
-                  e.target.value ? Number(e.target.value) : 0
-                )
-              }
-              placeholder="Max"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            {hasActiveFilters && (
+              <button
+                onClick={onClearFilters}
+                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                <X className="h-4 w-4" />
+                <span>Clear all</span>
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Location
-            </label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                value={locationInput}
-                onChange={(e) => setLocationInput(e.target.value)}
-                onKeyPress={handleLocationKeyPress}
-                placeholder="Type location and press Enter"
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+        {/* Filters Content - Collapsible */}
+        {!isFiltersCollapsed && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Job Type
+                </label>
+                <select
+                  value={filters.type}
+                  onChange={(e) => handleFilterChange('type', e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Any type</option>
+                  <option value="full-time">Full-time</option>
+                  <option value="part-time">Part-time</option>
+                  <option value="contract">Contract</option>
+                  <option value="internship">Internship</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Experience
+                </label>
+                <select
+                  value={filters.experienceLevel}
+                  onChange={(e) =>
+                    handleFilterChange('experienceLevel', e.target.value)
+                  }
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Any level</option>
+                  <option value="entry">Entry</option>
+                  <option value="mid">Mid</option>
+                  <option value="senior">Senior</option>
+                  <option value="lead">Lead</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Remote
+                </label>
+                <select
+                  value={filters.remote ? 'true' : 'false'}
+                  onChange={(e) =>
+                    handleFilterChange('remote', e.target.value === 'true')
+                  }
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Any</option>
+                  <option value="true">Remote only</option>
+                  <option value="false">On-site only</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Min Salary
+                </label>
+                <input
+                  type="number"
+                  value={filters.salaryMin || ''}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      'salaryMin',
+                      e.target.value ? Number(e.target.value) : 0
+                    )
+                  }
+                  placeholder="Min"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Max Salary
+                </label>
+                <input
+                  type="number"
+                  value={filters.salaryMax || ''}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      'salaryMax',
+                      e.target.value ? Number(e.target.value) : 0
+                    )
+                  }
+                  placeholder="Max"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
-            {Array.isArray(filters.location) && filters.location.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {filters.location.map((loc, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer group"
-                    onClick={() => removeLocation(loc)}
-                    title="Click to remove"
-                  >
-                    {loc}
-                    <X className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Skills
-            </label>
-            <input
-              type="text"
-              value={skillsInput}
-              onChange={(e) => setSkillsInput(e.target.value)}
-              onKeyPress={handleSkillsKeyPress}
-              placeholder="Type skill and press Enter"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            {filters.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {filters.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer group"
-                    onClick={() => removeSkill(tag)}
-                    title="Click to remove"
-                  >
-                    {tag}
-                    <X className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </span>
-                ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Location
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={locationInput}
+                    onChange={(e) => setLocationInput(e.target.value)}
+                    onKeyPress={handleLocationKeyPress}
+                    placeholder="Type location and press Enter"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                {Array.isArray(filters.location) &&
+                  filters.location.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {filters.location.map((loc, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer group"
+                          onClick={() => removeLocation(loc)}
+                          title="Click to remove"
+                        >
+                          {loc}
+                          <X className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </span>
+                      ))}
+                    </div>
+                  )}
               </div>
-            )}
-          </div>
-        </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Skills
+                </label>
+                <input
+                  type="text"
+                  value={skillsInput}
+                  onChange={(e) => setSkillsInput(e.target.value)}
+                  onKeyPress={handleSkillsKeyPress}
+                  placeholder="Type skill and press Enter"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {filters.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {filters.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer group"
+                        onClick={() => removeSkill(tag)}
+                        title="Click to remove"
+                      >
+                        {tag}
+                        <X className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Sort Section */}
