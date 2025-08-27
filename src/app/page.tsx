@@ -1,103 +1,290 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useMemo } from 'react';
+import { Search, Briefcase, Sparkles } from 'lucide-react';
+import JobFilters from '@/components/JobFilters';
+import JobCard from '@/components/JobCard';
+import { Job, JobSearchFilters, JobSearchSort } from '@/types';
+import { mockJobs } from '@/lib/mockData';
+
+export default function HomePage() {
+  const [jobs] = useState<Job[]>(mockJobs);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<JobSearchFilters>({
+    location: [],
+    type: '',
+    remote: false,
+    experienceLevel: '',
+    salaryMin: 0,
+    salaryMax: 0,
+    tags: [],
+  });
+  const [sort, setSort] = useState<JobSearchSort>({
+    field: 'postedDate',
+    direction: 'desc',
+  });
+
+  // Check if user has performed any search
+  const hasSearched =
+    searchQuery.trim() !== '' ||
+    Object.values(filters).some(
+      (value) =>
+        value !== '' &&
+        value !== false &&
+        (Array.isArray(value) ? value.length > 0 : true)
+    );
+
+  // Filter and sort jobs only when user has searched
+  const filteredAndSortedJobs = useMemo(() => {
+    if (!hasSearched) return [];
+
+    const filtered = jobs.filter((job) => {
+      // Search query filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          job.title.toLowerCase().includes(query) ||
+          job.company.toLowerCase().includes(query) ||
+          job.description.toLowerCase().includes(query) ||
+          job.tags.some((tag) => tag.toLowerCase().includes(query));
+
+        if (!matchesSearch) return false;
+      }
+
+      // Location filter
+      if (filters.location) {
+        if (Array.isArray(filters.location)) {
+          // Multiple locations - check if job location matches any of them
+          const jobLocationLower = job.location.toLowerCase();
+          const hasMatchingLocation = filters.location.some((loc) =>
+            jobLocationLower.includes(loc.toLowerCase())
+          );
+          if (!hasMatchingLocation) return false;
+        } else {
+          // Single location string
+          if (
+            !job.location.toLowerCase().includes(filters.location.toLowerCase())
+          ) {
+            return false;
+          }
+        }
+      }
+
+      // Job type filter
+      if (filters.type && job.type !== filters.type) {
+        return false;
+      }
+
+      // Remote filter
+      if (filters.remote !== false && job.remote !== filters.remote) {
+        return false;
+      }
+
+      // Experience level filter
+      if (
+        filters.experienceLevel &&
+        job.experienceLevel !== filters.experienceLevel
+      ) {
+        return false;
+      }
+
+      // Salary filters
+      if (filters.salaryMin > 0 && job.salary.min < filters.salaryMin) {
+        return false;
+      }
+      if (filters.salaryMax > 0 && job.salary.max > filters.salaryMax) {
+        return false;
+      }
+
+      // Tags filter
+      if (
+        filters.tags.length > 0 &&
+        !filters.tags.some((tag) => job.tags.includes(tag))
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // Sort jobs
+    filtered.sort((a, b) => {
+      let aValue: string | number, bValue: string | number;
+
+      switch (sort.field) {
+        case 'postedDate':
+          aValue = new Date(a.postedDate).getTime();
+          bValue = new Date(b.postedDate).getTime();
+          break;
+        case 'salary':
+          aValue = a.salary.min;
+          bValue = b.salary.min;
+          break;
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.company.toLowerCase();
+          break;
+        case 'company':
+          aValue = a.company.toLowerCase();
+          bValue = b.company.toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (sort.direction === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  }, [jobs, searchQuery, filters, sort, hasSearched]);
+
+  const handleSaveToggle = (jobId: string) => {
+    // In a real app, you'd update the backend here
+    console.log('Toggle save for job:', jobId);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      location: [],
+      type: '',
+      remote: false,
+      experienceLevel: '',
+      salaryMin: 0,
+      salaryMax: 0,
+      tags: [],
+    });
+    setSearchQuery('');
+  };
+
+  const savedJobsCount = jobs.filter((job) => job.isSaved).length;
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Find Your Next AI Startup Role
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Discover exciting opportunities at cutting-edge AI startups. Use our
+            smart search and filters to find the perfect match for your skills
+            and career goals.
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        {/* Search and Filters Section - Full Width */}
+        <div className="mb-8">
+          {/* Search Bar */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search for jobs, companies, skills, or describe what you're looking for..."
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Briefcase className="h-4 w-4" />
+                {hasSearched ? (
+                  <span>{filteredAndSortedJobs.length} jobs found</span>
+                ) : (
+                  <span>Start searching to find jobs</span>
+                )}
+                {savedJobsCount > 0 && (
+                  <>
+                    <span>•</span>
+                    <span className="text-blue-600">
+                      {savedJobsCount} saved
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Filters and Sort - Full Width */}
+          <JobFilters
+            filters={filters}
+            sort={sort}
+            onFiltersChange={setFilters}
+            onSortChange={setSort}
+            onClearFilters={handleClearFilters}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+
+        {/* Results Section */}
+        {!hasSearched ? (
+          // Initial state - no search performed
+          <div className="text-center py-16">
+            <div className="flex items-center justify-center mb-6">
+              <Sparkles className="h-16 w-16 text-blue-400 mr-4" />
+              <Briefcase className="h-16 w-16 text-gray-300" />
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              Ready to find your next AI startup role?
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto mb-8">
+              Use the search bar above to find jobs by keywords, or use the
+              smart filters to narrow down your search by location, job type,
+              experience level, and more.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto text-left">
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 className="font-medium text-gray-900 mb-2">
+                  🔍 Text Search
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Search for jobs, companies, or skills using natural language
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 className="font-medium text-gray-900 mb-2">
+                  ⚡ Smart Filters
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Use dropdowns and filters to find exactly what you need
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : filteredAndSortedJobs.length === 0 ? (
+          // Search performed but no results
+          <div className="text-center py-12">
+            <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No jobs found
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Try adjusting your search criteria or filters to find more
+              opportunities.
+            </p>
+            <button
+              onClick={handleClearFilters}
+              className="px-4 py-2 text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Clear all filters
+            </button>
+          </div>
+        ) : (
+          // Results found
+          <div className="space-y-6">
+            {filteredAndSortedJobs.map((job) => (
+              <JobCard key={job.id} job={job} onSaveToggle={handleSaveToggle} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
