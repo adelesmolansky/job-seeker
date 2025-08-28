@@ -42,15 +42,15 @@ export default function HomePage() {
     loadData();
   }, []);
 
-  // Check if user has performed any search
-  const hasSearched =
-    searchQuery.trim() !== '' ||
-    Object.values(filters).some(
-      (value) =>
-        value !== '' &&
-        value !== false &&
-        (Array.isArray(value) ? value.length > 0 : true)
-    );
+  // Handle real-time search as user types
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      // Reset AI search mode when user types
+      setIsAISearch(false);
+      setSearchInsights([]);
+      setRelatedSearches([]);
+    }
+  }, [searchQuery]);
 
   // Handle AI search
   const handleAISearch = async () => {
@@ -73,6 +73,7 @@ export default function HomePage() {
         },
       });
 
+      console.log('AI search returned:', aiResult.jobs.length, 'jobs');
       if (aiResult.jobs.length > 0) {
         setJobs(aiResult.jobs);
         const enhanced = enhanceSearchResults(
@@ -100,9 +101,16 @@ export default function HomePage() {
     setRelatedSearches([]);
   };
 
-  // Filter and sort jobs only when user has searched
+  // Filter and sort jobs - only show results when there's an actual search
   const filteredAndSortedJobs = useMemo(() => {
-    if (!hasSearched) return [];
+    console.log(
+      'Filtering jobs:',
+      jobs.length,
+      'total jobs, isAISearch:',
+      isAISearch
+    );
+    // Only show results when there's an actual search query or AI search performed
+    if (!searchQuery.trim() && !isAISearch) return [];
 
     const filtered = jobs.filter((job) => {
       // Safety check: ensure all required properties exist
@@ -118,9 +126,8 @@ export default function HomePage() {
         return false;
       }
 
-      // Search query filter
-      if (searchQuery && !isAISearch) {
-        // Only apply strict text filtering for regular search, not AI search
+      // Search query filter - only apply strict text filtering for regular search, not AI search
+      if (searchQuery.trim() && !isAISearch) {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
           job.title.toLowerCase().includes(query) ||
@@ -220,7 +227,7 @@ export default function HomePage() {
     });
 
     return filtered;
-  }, [jobs, searchQuery, filters, sort, hasSearched, isAISearch]);
+  }, [jobs, searchQuery, filters, sort, isAISearch]);
 
   const handleSaveToggle = (jobId: string) => {
     setJobs((prevJobs) =>
@@ -275,7 +282,11 @@ export default function HomePage() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAISearch()}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && searchQuery.trim()) {
+                        handleRegularSearch();
+                      }
+                    }}
                     placeholder="Search for jobs, companies, skills, or describe what you're looking for..."
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -294,12 +305,12 @@ export default function HomePage() {
                   onClick={handleRegularSearch}
                   className="px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
                 >
-                  Regular Search
+                  Text Search
                 </button>
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <Briefcase className="h-4 w-4" />
-                {hasSearched ? (
+                {searchQuery.trim() || isAISearch ? (
                   <span>{filteredAndSortedJobs.length} jobs found</span>
                 ) : (
                   <span>Start searching to find jobs</span>
@@ -339,19 +350,69 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* AI Search Results Header */}
-          {isAISearch && filteredAndSortedJobs.length > 0 && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Brain className="h-5 w-5 text-green-600" />
-                  <h3 className="font-medium text-green-900">
-                    AI Found {filteredAndSortedJobs.length} Matching Jobs
-                  </h3>
+          {/* Search Results Header */}
+          {(searchQuery.trim() || isAISearch) &&
+            filteredAndSortedJobs.length > 0 && (
+              <div
+                className={`border rounded-lg p-4 mb-6 ${
+                  isAISearch
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-blue-50 border-blue-200'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    {isAISearch ? (
+                      <Brain className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <Search className="h-5 w-5 text-blue-600" />
+                    )}
+                    <h3
+                      className={`font-medium ${
+                        isAISearch ? 'text-green-900' : 'text-blue-900'
+                      }`}
+                    >
+                      {isAISearch ? 'AI Found' : 'Found'}{' '}
+                      {filteredAndSortedJobs.length} Matching Jobs
+                    </h3>
+                  </div>
+                  <span
+                    className={`text-sm ${
+                      isAISearch ? 'text-green-700' : 'text-blue-700'
+                    }`}
+                  >
+                    Based on your search: &ldquo;{searchQuery}&rdquo;
+                  </span>
                 </div>
-                <span className="text-sm text-green-700">
-                  Based on your search: &ldquo;{searchQuery}&rdquo;
-                </span>
+              </div>
+            )}
+
+          {/* Search Tips */}
+          {searchQuery.trim() && !isAISearch && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center space-x-2 mb-2">
+                <Search className="h-5 w-5 text-yellow-600" />
+                <h3 className="font-medium text-yellow-900">
+                  Ready to search?
+                </h3>
+              </div>
+              <p className="text-yellow-800 text-sm mb-3">
+                Press Enter or click &quot;Text Search&quot; to find jobs
+                matching &quot;{searchQuery}&quot;
+              </p>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleRegularSearch}
+                  className="px-3 py-1 bg-yellow-600 text-white rounded-full text-sm hover:bg-yellow-700"
+                >
+                  Search Now
+                </button>
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="px-3 py-1 bg-white border border-yellow-300 text-yellow-700 rounded-full text-sm hover:bg-yellow-50"
+                >
+                  Clear
+                </button>
               </div>
             </div>
           )}
@@ -387,23 +448,9 @@ export default function HomePage() {
         </div>
 
         {/* Results Section */}
-        {!hasSearched ? (
+        {!searchQuery.trim() && !isAISearch ? (
           // Initial state - no search performed
           <div className="text-center py-16">
-            <div className="flex items-center justify-center mb-6">
-              <Sparkles className="h-16 w-16 text-blue-400 mr-4" />
-              <Brain className="h-16 w-16 text-blue-500 mr-4" />
-              <Briefcase className="h-16 w-16 text-gray-300" />
-            </div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              Ready to find your next AI startup role?
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto mb-8">
-              Use our AI-powered search to find jobs by describing what
-              you&apos;re looking for in natural language, or use the smart
-              filters to narrow down your search by location, job type,
-              experience level, and more.
-            </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">
               <div className="bg-white p-4 rounded-lg border border-gray-200">
                 <div className="flex items-center mb-2">
@@ -426,7 +473,7 @@ export default function HomePage() {
               </div>
               <div className="bg-white p-4 rounded-lg border border-gray-200">
                 <div className="flex items-center mb-2">
-                  <TrendingUp className="h-5 w-5 text-blue-600 mr-2" />
+                  <TrendingUp className="h-5 w-5 text-blue-600 mr-4" />
                   <h3 className="font-medium text-gray-900">
                     ⚡ Smart Filters
                   </h3>
