@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Briefcase, Building2, Heart, Search } from 'lucide-react';
+import { Briefcase, Building2, Heart, Search, Bot } from 'lucide-react';
 
 /**
  * Main navigation component for the AI Job Seeker application
@@ -13,6 +13,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/', label: 'Home', icon: Search },
     { href: '/companies', label: 'Companies', icon: Building2 },
+    { href: '/chatbot', label: 'AI Assistant', icon: Bot },
     { href: '/saved', label: 'Saved Jobs', icon: Heart },
   ];
 

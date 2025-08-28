@@ -32,9 +32,14 @@ export async function fetchAllData(): Promise<{
   companies: Company[];
 }> {
   try {
+    // Determine if we're running on the server or client
+    const baseUrl = typeof window === 'undefined' 
+      ? process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+      : '';
+    
     const [jobsResponse, companiesResponse] = await Promise.all([
-      fetch('/api/csv-data?type=jobs'),
-      fetch('/api/csv-data?type=companies'),
+      fetch(`${baseUrl}/api/csv-data?type=jobs`),
+      fetch(`${baseUrl}/api/csv-data?type=companies`),
     ]);
 
     if (!jobsResponse.ok || !companiesResponse.ok) {

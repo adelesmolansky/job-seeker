@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Search, Briefcase, Sparkles, Brain, TrendingUp } from 'lucide-react';
+import { Search, Briefcase, Brain, TrendingUp } from 'lucide-react';
 import JobFilters from '@/components/JobFilters';
 import JobCard from '@/components/JobCard';
 import { Job, JobSearchFilters, JobSearchSort } from '@/types';
